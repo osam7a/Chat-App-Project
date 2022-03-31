@@ -3,6 +3,7 @@ from _dataclasses.message import Message
 from _dataclasses.user import User
 from _dataclasses.channel import Channel
 from _dataclasses.error import Error
+from _secrets import mongoPassword
 import datetime
 import paseto
 import secrets
@@ -10,7 +11,7 @@ import uuid
 
 class Database:
     def __init__(self):
-        self.conn = MongoClient("mongodb+srv://osam7a:Gh6wr52gi5@chatapp.rz0eb.mongodb.net/Main?retryWrites=true&w=majority")
+        self.conn = MongoClient(f"mongodb+srv://osam7a:{mongoPassword}@chatapp.rz0eb.mongodb.net/Main?retryWrites=true&w=majority")
         self.db = self.conn['Main']
 
     def createChannel(self, chName, chPassword):
