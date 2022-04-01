@@ -2,3 +2,5 @@ env/
 **/__pycache__/
 
 config/_secrets.py
+
+test.py
