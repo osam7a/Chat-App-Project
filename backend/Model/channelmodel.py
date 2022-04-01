@@ -1,6 +1,5 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
-from typing import List
 from usermodel import User
 from messagemodel import Message
 
@@ -10,4 +9,4 @@ class Channel(BaseModel):
     chPassword: str
     messages: List[Message]
     users: List[User]
-    meta: dict
+    meta: Optional[dict]
