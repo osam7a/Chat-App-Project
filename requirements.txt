@@ -1,3 +1,11 @@
 # The web server fremework
 fastapi>=0.75.0
+# Web server
+uvicorn>=0.17.6
+# Async mongodb driver
 motor>=2.5.1
+pymongo[srv]
+#Required for password management and authentication
+paseto
+passlib[bcrypt]
+python-multipart
