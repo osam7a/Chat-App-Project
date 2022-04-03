@@ -47,7 +47,7 @@ class Database:
                 meta=channel["meta"],
             )
 
-    async def join_channel(self, user: User, chID: int) -> Union[None, Error]:
+    async def join_channel(self, user: User, chID: str) -> Union[None, Error]:
         channel = await self.fetch_channel(chID)
         if user.dict() in channel.users:
             return Error("User already in channel.", 1)
@@ -64,7 +64,7 @@ class Database:
             )
             await self.update_channel(chID, users=newUsers, messages=newMessages)
 
-    async def update_channel(self, chID, **kwargs) -> Union[None, Error]:
+    async def update_channel(self, chID: str, **kwargs) -> Union[None, Error]:
         collection = self.db.channels
         channel = await self.get_channel(chID)
         for k, v in kwargs:
@@ -83,33 +83,33 @@ class Database:
                 direct_messages=user["direct_messages"],
             )
 
-    async def register_user(self, username, password):
+    async def register_user(self, username: str, password: str):
         collection = self.db.users
         user = await collection.find_one({"username": username})
         if not user:
-            uID = None
-            await collection.insert_one(
-                User(
-                    ID=uID,
-                    username=username,
-                    password=password,
-                    created_at=datetime.utcnow(),
-                    direct_messages=[
-                        {
-                            "user": self.chatAppUser,
-                            "messages": [
-                                Message(
-                                    author=self.chatAppUser.dict(),
-                                    content="Welcome to chatapp!, if you need help, contact us on discord osam7a#1017 or midnightFirefly#9122",
-                                    created_at=datetime.utcnow(),
-                                ).dict()
-                            ],
-                        }
-                    ],
-                ).dict()
-            )
+            user = User(
+                username=username,
+                password=password,
+                created_at=datetime.utcnow(),
+                direct_messages=[
+                    {
+                        "user": self.chatAppUser,
+                        "messages": [
+                            Message(
+                                author=self.chatAppUser.dict(),
+                                content="Welcome to chatapp!, if you need help, contact us on discord osam7a#1017 or midnightFirefly#9122",
+                                created_at=datetime.utcnow(),
+                            ).dict()
+                        ],
+                    }
+                ],
+            ).dict()
+            x = await collection.insert_one(user)
+            user.id = x.inserted_id
+        else:
+            return Error(message="User already registered", code=1)
 
-    async def update_user(self, userID):
+    async def update_user(self, userID: str, **kwargs):
         collection = self.db.users
         user = await self.get_user(userID)
         for k, v in kwargs:
