@@ -10,15 +10,17 @@ from backend.errors.errormodel import Error
 from backend.Model.channelmodel import Channel
 from backend.Model.messagemodel import Message
 
-from config._secrets import _MONGO_URI
-
+_MONGO_URI = None
 
 class Database:
     def __init__(self):
-        self.db = AsyncIOMotorClient(_MONGO_URI).main
+        self.db = AsyncIOMotorClient(_MONGO_URI).Main
 
     async def create_channel(self, name: str, hash: str) -> Union[Channel, Error]:
         collection = self.db.channels
+        ch = collection.find_one({"name": name, "hash": hash})
+        if ch:
+            return Error(message="Already exists", code=1)
         created_at = int(time())
         try:
             channel = Channel(
@@ -114,3 +116,4 @@ class Database:
         user = await self.get_user(userID)
         for k, v in kwargs:
             await collection.replace_one(user.dict(), {k: v})
+
