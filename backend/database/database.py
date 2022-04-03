@@ -105,37 +105,7 @@ class Database:
                 direct_messages=user["direct_messages"],
             )
 
-<<<<<<< HEAD
     async def update_user(self, userID):
-=======
-    async def register_user(self, username: str, password: str):
-        collection = self.db.users
-        user = await collection.find_one({"username": username})
-        if not user:
-            user = User(
-                username=username,
-                password=password,
-                created_at=datetime.utcnow(),
-                direct_messages=[
-                    {
-                        "user": self.chatAppUser,
-                        "messages": [
-                            Message(
-                                author=self.chatAppUser.dict(),
-                                content="Welcome to chatapp!, if you need help, contact us on discord osam7a#1017 or midnightFirefly#9122",
-                                created_at=datetime.utcnow(),
-                            ).dict()
-                        ],
-                    }
-                ],
-            ).dict()
-            x = await collection.insert_one(user)
-            user.id = x.inserted_id
-        else:
-            return Error(message="User already registered", code=1)
-
-    async def update_user(self, userID: str, **kwargs):
->>>>>>> 73ffbc84e76981e55a823e37f80b6a7cb52f9ac3
         collection = self.db.users
         user = await self.get_user(userID)
         for k, v in kwargs:
