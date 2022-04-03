@@ -18,7 +18,9 @@ class Database:
     def __init__(self):
         self.db = AsyncIOMotorClient(_MONGO_URI).main
 
-    async def register_user(self, username: str, hash: str) -> Union[usermodel.User, Error]:
+    async def register_user(
+        self, username: str, hash: str
+    ) -> Union[usermodel.User, Error]:
         collection = self.db.users
         created_at = int(time())
         try:
@@ -101,7 +103,6 @@ class Database:
                 password=user["password"],
                 direct_messages=user["direct_messages"],
             )
-
 
     async def update_user(self, userID):
         collection = self.db.users
