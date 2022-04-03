@@ -4,7 +4,7 @@ fastapi>=0.75.0
 uvicorn>=0.17.6
 # Async mongodb driver
 motor>=2.5.1
-pymongo[srv]
+motor[srv]
 #Required for password management and authentication
 paseto
 passlib[bcrypt]
