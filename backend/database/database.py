@@ -11,18 +11,16 @@ from backend.Model import usermodel
 from backend.Model import channelmodel
 from backend.Model.messagemodel import Message
 
-from config._secrets import _MONGO_URI
-
+_MONGO_URI = None
 
 class Database:
     def __init__(self):
-        self.db = AsyncIOMotorClient(_MONGO_URI).main
+        self.db = AsyncIOMotorClient(_MONGO_URI).Main
 
     async def register_user(
         self, username: str, hash: str
     ) -> Union[usermodel.User, Error]:
         collection = self.db.users
-        created_at = int(time())
         try:
             user = usermodel.User(
                 username=username,
@@ -40,6 +38,9 @@ class Database:
         self, name: str, hash: str, owner: channelmodel.User
     ) -> Union[channelmodel.Channel, Error]:
         collection = self.db.channels
+        ch = collection.find_one({"name": name, "hash": hash})
+        if ch:
+            return Error(message="Already exists", code=1)
         created_at = int(time())
         try:
             channel = channelmodel.Channel(
@@ -68,7 +69,7 @@ class Database:
                 meta=channel["meta"],
             )
 
-    async def join_channel(self, user: User, chID: int) -> Union[None, Error]:
+    async def join_channel(self, user: User, chID: str) -> Union[None, Error]:
         channel = await self.fetch_channel(chID)
         if user.dict() in channel.users:
             return Error("User already in channel.", 1)
@@ -85,7 +86,7 @@ class Database:
             )
             await self.update_channel(chID, users=newUsers, messages=newMessages)
 
-    async def update_channel(self, chID, **kwargs) -> Union[None, Error]:
+    async def update_channel(self, chID: str, **kwargs) -> Union[None, Error]:
         collection = self.db.channels
         channel = await self.get_channel(chID)
         for k, v in kwargs:
@@ -104,8 +105,39 @@ class Database:
                 direct_messages=user["direct_messages"],
             )
 
+<<<<<<< HEAD
     async def update_user(self, userID):
+=======
+    async def register_user(self, username: str, password: str):
+        collection = self.db.users
+        user = await collection.find_one({"username": username})
+        if not user:
+            user = User(
+                username=username,
+                password=password,
+                created_at=datetime.utcnow(),
+                direct_messages=[
+                    {
+                        "user": self.chatAppUser,
+                        "messages": [
+                            Message(
+                                author=self.chatAppUser.dict(),
+                                content="Welcome to chatapp!, if you need help, contact us on discord osam7a#1017 or midnightFirefly#9122",
+                                created_at=datetime.utcnow(),
+                            ).dict()
+                        ],
+                    }
+                ],
+            ).dict()
+            x = await collection.insert_one(user)
+            user.id = x.inserted_id
+        else:
+            return Error(message="User already registered", code=1)
+
+    async def update_user(self, userID: str, **kwargs):
+>>>>>>> 73ffbc84e76981e55a823e37f80b6a7cb52f9ac3
         collection = self.db.users
         user = await self.get_user(userID)
         for k, v in kwargs:
             await collection.replace_one(user.dict(), {k: v})
+
