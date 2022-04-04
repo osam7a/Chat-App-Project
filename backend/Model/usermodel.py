@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 
 class Channel(BaseModel):
-    id: str = Field(alias='_id')
+    id: str
     name: str
     public: bool
     joined_at: int

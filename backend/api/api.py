@@ -37,12 +37,12 @@ async def main():
         }]
     }
 
-@app.get("/fetch_channel")
+@app.get("/channel/fetch")
 async def fetch_channel(id: str) -> dict:
     db = Database()
     channel = await db.fetch_channel(id)
     if not isinstance(channel, Error) and isinstance(channel, Channel):
-        return channel.dict()
+        return channel
     else:
         return {
             "error": {
@@ -52,7 +52,7 @@ async def fetch_channel(id: str) -> dict:
             }
         }
 
-@app.post("/create_channel", status_code=201)
+@app.post("/channel/create", status_code=201)
 async def create_channel(name: str, hash: str, Authorization = Header(None)) -> dict:
     db = Database()
     authorized = await authorize(Authorization)

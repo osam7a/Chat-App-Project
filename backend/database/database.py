@@ -1,4 +1,3 @@
-from datetime import datetime
 from time import time
 from typing import Union
 from bson.objectid import ObjectId
@@ -9,13 +8,25 @@ from backend.Model.usermodel import User
 from backend.errors.errormodel import Error
 from backend.Model import usermodel
 from backend.Model import channelmodel
-from backend.Model.messagemodel import Message
 
-_MONGO_URI = None
+from backend.database import utils
+
+from config._secrets import _MONGO_URI
+
 
 class Database:
+    """
+    A class to containing async methods to manage database operations
+    ...
+
+    Methods
+    -------
+    register_user(username: str, hash: str)
+        Registers a user to the user collection in database
+    """
+
     def __init__(self):
-        self.db = AsyncIOMotorClient(_MONGO_URI).Main
+        self.db = AsyncIOMotorClient(_MONGO_URI).main
 
     async def register_user(
         self, username: str, hash: str
@@ -32,15 +43,11 @@ class Database:
             return user
         except Exception as e:
             raise e
-            pass
 
     async def create_channel(
         self, name: str, hash: str, owner: channelmodel.User
     ) -> Union[channelmodel.Channel, Error]:
         collection = self.db.channels
-        ch = collection.find_one({"name": name, "hash": hash})
-        if ch:
-            return Error(message="Already exists", code=1)
         created_at = int(time())
         try:
             channel = channelmodel.Channel(
@@ -69,22 +76,25 @@ class Database:
                 meta=channel["meta"],
             )
 
-    async def join_channel(self, user: User, chID: str) -> Union[None, Error]:
-        channel = await self.fetch_channel(chID)
-        if user.dict() in channel.users:
+    async def join_channel(self, user: usermodel.User, id: str) -> Union[None, Error]:
+        channel = await self.fetch_channel(id)
+        if isinstance(channel, Error):
+            return channel
+        channeluser = utils.um_to_cum(user)
+        if channeluser.dict() in channel.users:
             return Error("User already in channel.", 1)
         else:
-            newUsers = channel.users
-            newUsers.append(user.dict())
-            newMessages = channel.messages
-            newMessages.append(
-                Message(
-                    author=user,
-                    content=f"{user.username} just joined!",
-                    created_at=datetime.utcnow,
-                ).dict()
+            collection = self.db.channels
+            channel.users.append(channeluser)
+            await collection.update_one(
+                {"_id": ObjectId(channel.id)}, {"$set": channel.dict()}
             )
-            await self.update_channel(chID, users=newUsers, messages=newMessages)
+            collection = self.db.users
+            userchannel = utils.cm_to_ucm(channel, int(time()))
+            user.channels.append(userchannel)
+            await collection.update_one(
+                {"_id": ObjectId(user.id)}, {"$set": user.dict()}
+            )
 
     async def update_channel(self, chID: str, **kwargs) -> Union[None, Error]:
         collection = self.db.channels
@@ -104,10 +114,3 @@ class Database:
                 password=user["password"],
                 direct_messages=user["direct_messages"],
             )
-
-    async def update_user(self, userID):
-        collection = self.db.users
-        user = await self.get_user(userID)
-        for k, v in kwargs:
-            await collection.replace_one(user.dict(), {k: v})
-

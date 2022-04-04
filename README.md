@@ -1,6 +1,6 @@
 # Chat App Project
 ## How to host
-1. Install dependencies by running `pip install requirements.txt`
+1. Install dependencies by running `pip install -r requirements.txt`
 2. Create a [mongodb](https://mongodb.com) cluster
 4. Go to network access
 5. Put your IP address (or 0.0.0.0)
