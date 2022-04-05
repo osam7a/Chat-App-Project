@@ -4,7 +4,6 @@ from bson.objectid import ObjectId
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from backend.Model.usermodel import User
 from backend.errors.errormodel import Error
 from backend.Model import usermodel
 from backend.Model import channelmodel
@@ -44,6 +43,21 @@ class Database:
         except Exception as e:
             raise e
 
+    async def fetch_user(self, id: str):
+        id = ObjectId(id)
+        collection = self.db.users
+        user = await collection.find_one({"_id": id})
+        if not user:
+            return Error(f"User does not exist", 404)
+        else:
+            return usermodel.User(
+                _id=str(user["_id"]),
+                username=user["username"],
+                hash=user["hash"],
+                channels=user["channels"],
+                meta=user["meta"],
+            )
+
     async def create_channel(
         self, name: str, hash: str, owner: channelmodel.User
     ) -> Union[channelmodel.Channel, Error]:
@@ -55,6 +69,13 @@ class Database:
             )
             x = await collection.insert_one(channel.dict(exclude={"id"}))
             channel.id = str(x.inserted_id)
+            collection = self.db.users
+            user = await self.fetch_user(owner.id)
+            userchannel = utils.cm_to_ucm(channel, int(time()))
+            user.channels.append(userchannel)
+            await collection.update_one(
+                {"_id": ObjectId(user.id)}, {"$set": user.dict()}
+            )
             return channel
         except Exception as e:
             return Error(message="Could not create channel", code=1)
@@ -76,7 +97,7 @@ class Database:
                 meta=channel["meta"],
             )
 
-    async def join_channel(self, user: usermodel.User, id: str) -> Union[None, Error]:
+    async def join_channel(self, user: usermodel.User, id: str, admin: bool = False) -> Union[None, Error]:
         channel = await self.fetch_channel(id)
         if isinstance(channel, Error):
             return channel
@@ -87,7 +108,7 @@ class Database:
             collection = self.db.channels
             channel.users.append(channeluser)
             await collection.update_one(
-                {"_id": ObjectId(channel.id)}, {"$set": channel.dict()}
+                {"_id": ObjectId(channel.id)}, {"$set": channel.dict(exclude={"id"})}
             )
             collection = self.db.users
             userchannel = utils.cm_to_ucm(channel, int(time()))
@@ -96,21 +117,16 @@ class Database:
                 {"_id": ObjectId(user.id)}, {"$set": user.dict()}
             )
 
-    async def update_channel(self, chID: str, **kwargs) -> Union[None, Error]:
-        collection = self.db.channels
-        channel = await self.get_channel(chID)
-        for k, v in kwargs:
-            await collection.replace_one(channel.dict(), {k: v})
 
-    async def get_user(self, uID):
-        collection = self.db.users
-        user = await collection.find_one({"ID": uID})
-        if not user:
-            return Error(f"User does not exist", 404)
-        else:
-            return User(
-                ID=user["ID"],
-                username=user["username"],
-                password=user["password"],
-                direct_messages=user["direct_messages"],
-            )
+    async def add_message_to_channel(
+        self, message: channelmodel.Message, id: str
+    ) -> Union[channelmodel.Message, Error]:
+        channel = await self.fetch_channel(id)
+        if isinstance(channel, Error):
+            return channel
+        channel.messages.append(message)
+        collection = self.db.channels
+        await collection.update_one(
+            {"_id": ObjectId(channel.id)}, {"$set": channel.dict(exclude={"id"})}
+        )
+        return message
