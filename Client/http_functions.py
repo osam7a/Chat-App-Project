@@ -37,7 +37,9 @@ async def fetch_channel(id):
                 ) 
 
 async def create_channel(name, hash):
-    pass
+    async with aiohttp.ClientSession() as cs:
+        async with cs.get(f"{BASE_URL}/channel/fetch?id={id}") as resp:
+            _json = resp.json()
 
 async def send_message(channel_id, message):
     pass

@@ -27,7 +27,7 @@ def receive_event(event, type):
 response = get_response(BASE_URL + '/events')
 client = SSEClient(response)
 while len(client.events()) != 0:
-    for i in client.events():
-        i = json.loads(i)
-        receive_event(from_dict(i['event']), i['type'])
+    for event in client.events():
+        event = json.loads(event)
+        receive_event(from_dict(event['event']), event['type'])
 
