@@ -1,5 +1,5 @@
 import aiohttp
-from Client.Model.usermodel import User
+from Client.Model.usermodel import Channel
 from Client.constants import BASE_URL
 
 async def fetch_user(id):
@@ -26,7 +26,7 @@ async def fetch_channel(id):
                 if _json['error']['code'] == 404:
                     return 404
             else:
-                return User(
+                return Channel(
                     id = _json['id'],
                     created_at = _json['created_at'],
                     name = _json['name'],
@@ -40,6 +40,20 @@ async def create_channel(name, hash):
     async with aiohttp.ClientSession() as cs:
         async with cs.get(f"{BASE_URL}/channel/fetch?id={id}") as resp:
             _json = resp.json()
+            if "error" in _json:
+                # Error occured 
+                if _json['error']['code'] == 1:
+                    return 1
+                else:
+                    return Channel(
+                        id = _json['id'],
+                        created_at = _json['created_at'],
+                        name = _json['name'],
+                        hash = _json['hash'],
+                        messages = _json['messages'],
+                        users = _json['users'],
+                        meta = _json['meta']
+                    ) 
 
 async def send_message(channel_id, message):
     pass
