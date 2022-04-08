@@ -8,7 +8,7 @@ class User(BaseModel):
     meta: Optional[dict]
 
 class Message(BaseModel):
-    id: Optional[str] = Field(alias='_id')
+    id: Optional[str]
     created_at: int
     author: User
     content: str
