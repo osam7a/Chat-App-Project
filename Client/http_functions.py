@@ -5,7 +5,7 @@ from Client.constants import BASE_URL
 async def fetch_user(id):
     async with aiohttp.ClientSession() as cs:
         async with cs.get(f"{BASE_URL}/user/fetch?id={id}") as resp:
-            _json = resp.json()
+            _json = await resp.json()
             if "error" in _json:
                 if _json['error']['code'] == 404:
                     return 404
@@ -21,7 +21,7 @@ async def fetch_user(id):
 async def fetch_channel(id):
     async with aiohttp.ClientSession() as cs:
         async with cs.get(f"{BASE_URL}/channel/fetch?id={id}") as resp:
-            _json = resp.json()
+            _json = await resp.json()
             if "error" in _json:
                 if _json['error']['code'] == 404:
                     return 404
@@ -39,7 +39,7 @@ async def fetch_channel(id):
 async def create_channel(name, hash):
     async with aiohttp.ClientSession() as cs:
         async with cs.get(f"{BASE_URL}/channel/fetch?id={id}") as resp:
-            _json = resp.json()
+            _json = await resp.json()
             if "error" in _json:
                 # Error occured 
                 if _json['error']['code'] == 1:
@@ -58,8 +58,11 @@ async def create_channel(name, hash):
 async def send_message(channel_id, message):
     pass
 
-async def register_user(name, hash):
-    pass
+async def register_user(name, password):
+    async with aiohttp.ClientSession() as cs:
+        hashedPassword = None
+        async with cs.get(f"{BASE_URL}/user/register", params = {"username": name, "hash": hashedPassword}) as resp:
+            _json = await resp.json()
 
 async def login_as(name, password):
     pass
